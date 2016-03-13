@@ -11,6 +11,8 @@ from sklearn import metrics
 from sklearn.cross_validation import cross_val_score
 from sklearn.preprocessing import Imputer
 import numpy
+import operator
+
 
 products = pd.read_csv('./amazon_baby.csv')
 
@@ -80,7 +82,29 @@ scores = sentiment_model.decision_function(sample_test_matrix)
 print scores
 print sentiment_model.predict(sample_test_matrix)
 
-predictions = map(sentiment_model.predict())
+test_set_scores = sentiment_model.decision_function(test_matrix)
+names = test_data["name"]
+name_predictions = dict(zip(names, test_set_scores))
 
+sorted_reviews = sorted(name_predictions.items(), key=operator.itemgetter(1), reverse=True)
 
+most_positive_reviews = sorted_reviews[:20]
+print most_positive_reviews
+
+most_negative_reviews = sorted_reviews[-1:-22:-1]
+print most_negative_reviews
+
+predictions = sentiment_model.predict(test_matrix)
+correct_labels = test_data["sentiment"]
+
+match_predictions_labels = zip(predictions, correct_labels)
+
+correct_count = 0
+for prediction, label in match_predictions_labels:
+	if prediction == label:
+		correct_count += 1
+
+print "Number of correctly classified reviews ", correct_count
+print "Number of reviews in test data set ", len(match_predictions_labels)
+print "Accuracy ", (float(correct_count)/len(match_predictions_labels)) * 100
 
