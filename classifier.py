@@ -94,17 +94,37 @@ print most_positive_reviews
 most_negative_reviews = sorted_reviews[-1:-22:-1]
 print most_negative_reviews
 
-predictions = sentiment_model.predict(test_matrix)
-correct_labels = test_data["sentiment"]
+def get_accuracy(model, data_matrix, dataset):
+	predictions = model.predict(data_matrix)
 
-match_predictions_labels = zip(predictions, correct_labels)
+	match_predictions_labels = zip(predictions, dataset)
 
-correct_count = 0
-for prediction, label in match_predictions_labels:
-	if prediction == label:
-		correct_count += 1
+	correct_count = 0
+	for prediction, label in match_predictions_labels:
+		if prediction == label:
+			correct_count += 1
+	return (float(correct_count)/len(match_predictions_labels))
 
-print "Number of correctly classified reviews ", correct_count
-print "Number of reviews in test data set ", len(match_predictions_labels)
-print "Accuracy ", (float(correct_count)/len(match_predictions_labels)) * 100
+# Classifier with a set of significant words
+
+significant_words = ['love', 'great', 'easy', 'old', 'little', 'perfect', 'loves', 
+      'well', 'able', 'car', 'broke', 'less', 'even', 'waste', 'disappointed', 
+      'work', 'product', 'money', 'would', 'return']
+
+vectorizer_word_subset = CountVectorizer(vocabulary=significant_words) # limit to 20 words
+train_matrix_word_subset = vectorizer_word_subset.fit_transform(train_data['review_clean'])
+test_matrix_word_subset = vectorizer_word_subset.transform(test_data['review_clean'])
+
+simple_model = LogisticRegression()
+simple_model.fit(train_matrix_word_subset, train_data['sentiment'])
+
+simple_model_coef_table = dict(zip(significant_words, simple_model.coef_.flatten()))
+
+print simple_model_coef_table
+
+print "Training Set Accuracy : Sentiment Model ", get_accuracy(sentiment_model, train_matrix, train_data["sentiment"])
+print "Test Set Accuracy : Sentiment Model ", get_accuracy(sentiment_model, test_matrix, test_data["sentiment"])
+print "Training Set Accuracy : Simple Model ", get_accuracy(simple_model, train_matrix_word_subset, train_data["sentiment"])
+print "Test Set Accuracy : Simple Model ", get_accuracy(simple_model, train_matrix_word_subset, test_data["sentiment"])
+
 
